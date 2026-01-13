@@ -1,11 +1,11 @@
 {
-  "name": "wk03-device-info",
+  "name": "clipverse-waciq",
   "version": "1.0.0",
-  "private": true,
+  "main": "index.js",
   "scripts": {
-    "start": "vercel dev"
+    "start": "node api/upload-video.js"
   },
-  "engines": {
-    "node": "22.x"
+  "dependencies": {
+    "telegraf": "^4.18.0"
   }
-} 
+}

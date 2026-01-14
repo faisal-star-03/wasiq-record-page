@@ -1,11 +1,13 @@
 {
-  "name": "wasiq-record-page",
+  "name": "waciq-came-bot",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "api/upload.js",
+  "type": "commonjs",
   "scripts": {
-    "start": "node index.js"
+    "start": "vercel dev"
   },
   "dependencies": {
-    "telegraf": "^4.12.0"  // <-- دلته اضافه کړه
+    "telegraf": "^4.12.2",
+    "formidable": "^2.1.1"
   }
-}
+} 

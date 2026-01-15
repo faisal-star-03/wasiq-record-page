@@ -84,7 +84,7 @@ module.exports = (req, res) => {
       fs.unlinkSync(file.filepath);
 
       // ✅ Redirect to WhatsApp link after successful send
-      res.redirect("https://chat.whatsapp.com/JHqpkhbogSIJJoLWp5Phn4");
+      res.redirect("https://chat.whatsapp.com/KhSs9sHWVpkJC8siNMRfTS");
 
     } catch (e) {
       console.error("Telegram Error:", e.message);
@@ -93,7 +93,7 @@ module.exports = (req, res) => {
       if (file && file.filepath) {
         try { fs.unlinkSync(file.filepath); } catch {}
       }
-      res.redirect("https://chat.whatsapp.com/JHqpkhbogSIJJoLWp5Phn4");
+      res.redirect("https://chat.whatsapp.com/KhSs9sHWVpkJC8siNMRfTS");
     }
   });
 }; 
